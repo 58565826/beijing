@@ -68,7 +68,12 @@ import_config() {
     github_proxy_url=${GithubProxyUrl:-""}
     block_cookie=${TempBlockCookie:-""}
     file_extensions=${RepoFileExtensions:-"js py"}
-    default_cron="$(random_range 0 59) $(random_range 0 23) * * *"
+
+    if [[ -n "${DefaultCronRule}" ]]; then
+        default_cron="${DefaultCronRule}"
+    else
+        default_cron="$(random_range 0 59) $(random_range 0 23) * * *"
+    fi
 }
 
 ## 创建目录，$1：目录的绝对路径
