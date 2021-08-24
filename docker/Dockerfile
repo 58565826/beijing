@@ -43,6 +43,8 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
     && pnpm install -g pm2 \
     && pnpm install -g ts-node typescript tslib axios date-fns png-js \
     && npm install canvas --build-from-source \
+    && mkdir -p /ql/log \
+    && echo "" > /ql/log/task_error.log \
     && rm -rf /root/.npm \
     && pnpm install --prod \
     && rm -rf /root/.pnpm-store \
