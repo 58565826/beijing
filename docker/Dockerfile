@@ -24,13 +24,11 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
                              python3 \
                              jq \
                              openssh \
-    && apk add --no-cache build-base g++ cairo-dev pango-dev giflib-dev \
     && rm -rf /var/cache/apk/* \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo "Asia/Shanghai" > /etc/timezone \
     && touch ~/.bashrc \
     && mkdir /run/nginx \
-    && mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2 \
     && git clone -b ${QL_BRANCH} ${QL_URL} ${QL_DIR} \
     && git config --global user.email "jizhuni@126.com" \
     && git config --global user.name "58563528" \
@@ -41,8 +39,7 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
     && chmod 777 ${QL_DIR}/docker/*.sh \
     && npm install -g pnpm \
     && pnpm install -g pm2 \
-    && pnpm install -g ts-node typescript tslib axios date-fns png-js \
-    && npm install canvas --build-from-source \
+    && pnpm install -g ts-node typescript tslib \
     && mkdir -p /ql/log \
     && echo "" > /ql/log/task_error.log \
     && rm -rf /root/.npm \
