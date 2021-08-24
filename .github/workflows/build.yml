@@ -1,0 +1,34 @@
+name: build static-v2.8
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '14'
+      
+      - name: build front and back
+        run: |
+          yarn install
+          yarn build
+          yarn build-back
+        
+      - name: copy to static repo
+        env: 
+          # GITHUB_REPO: gitee.com/jizhuni_kk/beijing_static
+          GITHUB_REPO: github.com/${{ secrets.DOCKER_USERNAME }}/beijing_static
+        run: |
+          mkdir -p static
+          cd ./static 
+          cp -rf ../dist ./ && cp -rf ../build ./
+          git init && git add .
+          git config user.name "${{ secrets.DOCKER_USERNAME }}"
+          git config user.email "jizhuni@126.com"
+          git commit --allow-empty -m "copy static at $(date +'%Y-%m-%d %H:%M:%S')"
+          git push --force --quiet "https://${{ secrets.DOCKER_USERNAME }}:${{ secrets.API_TOKEN }}@${GITHUB_REPO}.git" master:master
