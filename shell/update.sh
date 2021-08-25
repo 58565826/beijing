@@ -135,7 +135,6 @@ add_cron() {
 
 ## 更新仓库
 update_repo() {
-    echo -e "--------------------------------------------------------------\n"
     local url="$1"
     local path="$2"
     local blackword="$3"
