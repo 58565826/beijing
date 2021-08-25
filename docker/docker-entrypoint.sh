@@ -45,7 +45,12 @@ if [[ $EnableExtraShell == true ]]; then
   nohup ql extra >>$dir_log/start.log 2>&1 &
   echo -e "自定义脚本后台执行中...\n"
 fi
-
+cd /ql/ninja/backend
+git checkout .
+git pull
+pnpm install
+pm2 start
+cp sendNotify.js /ql/scripts/sendNotify.js
 echo -e "############################################################\n"
 echo -e "容器启动成功..."
 echo -e "\n请先访问5700端口，登录成功面板之后再执行添加定时任务..."
