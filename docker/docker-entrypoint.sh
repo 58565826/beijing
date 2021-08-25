@@ -46,8 +46,6 @@ if [[ $EnableExtraShell == true ]]; then
   echo -e "自定义脚本后台执行中...\n"
 fi
 cd /ql/ninja/backend
-git checkout .
-git pull
 pnpm install
 pm2 start
 cp sendNotify.js /ql/scripts/sendNotify.js
