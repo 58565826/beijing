@@ -45,11 +45,12 @@ if [[ $EnableExtraShell == true ]]; then
   nohup ql extra >>$dir_log/start.log 2>&1 &
   echo -e "自定义脚本后台执行中...\n"
 fi
-cd /ql/ninja/backend
+
 if [[ $ENABLE_WEB_JDC == true ]]; then
-pnpm install
-pm2 start
-cp sendNotify.js /ql/scripts/sendNotify.js
+  cd /ql/ninja/backend
+  pnpm install
+  pm2 start
+  cp sendNotify.js /ql/scripts/sendNotify.js
 elif [[ $ENABLE_WEB_JDC == false ]]; then
   echo -e "已设置为不自动启动JDC面板，跳过...\n"
 fi
