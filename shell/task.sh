@@ -280,7 +280,7 @@ run_normal() {
             random_delay
         fi
     fi
-    combine_all
+    combine_only
     log_time=$(date "+%Y-%m-%d-%H-%M-%S")
     log_dir_tmp="${first_param##*/}"
     log_dir="$dir_log/${log_dir_tmp%%.*}"
