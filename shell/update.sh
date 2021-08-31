@@ -488,7 +488,13 @@ main() {
     resetlet)
         echo -e "## 开始执行... $begin_time\n" >>$log_path
         auth_value=$(cat $file_auth_user | jq '.retries =0' -c)
-        echo -e "重置成功 \n $auth_value" >>$log_path
+        echo -e "重置登录错误次数成功 \n $auth_value" >>$log_path
+        echo "$auth_value" >$file_auth_user
+        ;;
+    resettfa)
+        echo -e "## 开始执行... $begin_time\n" >>$log_path
+        auth_value=$(cat $file_auth_user | jq '.twoFactorActived =false' -c)
+        echo -e "禁用两步验证成功 \n $auth_value" >>$log_path
         echo "$auth_value" >$file_auth_user
         ;;
     *)
