@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
-## Build 20210821-001
+## Build 20210830-001
 
 ## 导入通用变量与函数
 dir_shell=/ql/shell
 . $dir_shell/share.sh
 
-dir_env_db=/$dir_db/env.db
 
 ## 调试模式开关，默认是0，表示关闭；设置为1，表示开启
 DEBUG="1"
@@ -31,6 +30,7 @@ gen_pt_pin_array() {
   local tmp1 tmp2 i pt_pin_temp
   for i in "${!array[@]}"; do
     pt_pin_temp=$(echo ${array[i]} | perl -pe "{s|.*pt_pin=([^; ]+)(?=;?).*|\1|; s|%|\\\x|g}")
+    remark_name[i]=$(cat $dir_db/env.db | grep ${array[i]} | perl -pe "{s|.*remarks\":\"([^\"]+).*|\1|g}" | tail -1)
     [[ $pt_pin_temp == *\\x* ]] && pt_pin[i]=$(printf $pt_pin_temp) || pt_pin[i]=$pt_pin_temp
   done
 }
@@ -428,17 +428,13 @@ esac
 }
 
 check_jd_cookie(){
-[[ "$(curl -s --noproxy "*" "https://bean.m.jd.com/bean/signIndex.action" -H "cookie: $1")" ]] && echo "COOKIE 有效" || echo "COOKIE 已失效"
-}
-
-delete_old_cookie(){
-local ifold=$(curl -s --noproxy "*" "https://bean.m.jd.com/bean/signIndex.action" -H "cookie: $1")
-if [ ! "$ifold" ]; then
-  sed -i "s/$1/d" $dir_env_db
-  echo "COOKIE 失效，将被删除"
-else
-  echo "COOKIE 有效"
-fi
+    local test_connect="$(curl -I -s --connect-timeout 5 https://bean.m.jd.com/bean/signIndex.action -w %{http_code} | tail -n1)"
+    local test_jd_cookie="$(curl -s --noproxy "*" "https://bean.m.jd.com/bean/signIndex.action" -H "cookie: $1")"
+    if [ "$test_connect" -eq "302" ]; then
+        [[ "$test_jd_cookie" ]] && echo "(COOKIE 有效)" || echo "(COOKIE 已失效)"
+    else
+        echo "(API 连接失败)"
+    fi
 }
 
 dump_user_info(){
@@ -447,11 +443,7 @@ local envs=$(eval echo "\$JD_COOKIE")
 local array=($(echo $envs | sed 's/&/ /g'))
     for ((m = 0; m < ${#pt_pin[*]}; m++)); do
         j=$((m + 1))
-        if [[ $DEL_COOKIE = "1" ]]; then
-          echo -e "## 用户名 $j：${pt_pin[m]} (`delete_old_cookie ${array[m]}`)\nCookie$j=\"${array[m]}\""
-        else
-          echo -e "## 用户名 $j：${pt_pin[m]} (`check_jd_cookie ${array[m]}`)\nCookie$j=\"${array[m]}\""
-        fi
+        echo -e "## 用户名 $j：${pt_pin[m]} 备注：${remark_name[m]} `check_jd_cookie ${array[m]}`\nCookie$j=\"${array[m]}\""
     done
 }
 
@@ -541,7 +533,7 @@ install_dependencies_force(){
 install_dependencies_all(){
     install_dependencies_normal $package_name
     for i in $package_name; do
-        install_dependencies_force $i
+        {install_dependencies_force $i} &
     done
 }
 
