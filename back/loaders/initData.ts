@@ -26,6 +26,12 @@ const initData = [
     schedule: '30 7 * * *',
     isDisabled: 1,
   },
+    {
+    name: '查询Cookie',
+    command: 'ql cookie',
+    schedule: '30 0-23/1 * * *',
+    isDisabled: 1,
+  },
 ];
 
 export default async () => {
