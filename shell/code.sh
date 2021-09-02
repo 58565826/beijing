@@ -544,7 +544,8 @@ ps -ef|grep "$1"|grep -Ev "$2"|awk '{print $1}'|xargs kill -9
 ## 执行并写入日志
 kill_proc "code.sh" "grep|$$" >/dev/null 2>&1
 [[ $FixDependType = "1" ]] && [[ "$ps_num" -le $proc_num ]] && install_dependencies_all >/dev/null 2>&1 &
-latest_log=$(ls -r $dir_code | head -1)
+##latest_log=$(ls -r $dir_code | head -1)
+latest_log=$(date "+%Y-%m-%d-%H-%M-%S")
 latest_log_path="$dir_code/$latest_log"
 ps_num="$(ps | grep code.sh | grep -v grep | wc -l)"
 export_all_codes | perl -pe "{s|京东种豆|种豆|; s|crazyJoy任务|疯狂的JOY|}"
