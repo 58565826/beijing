@@ -23,7 +23,6 @@ const Login = () => {
   const [waitTime, setWaitTime] = useState<any>();
   const { theme } = useTheme();
   const [twoFactor, setTwoFactor] = useState(false);
-  const [loginInfo, setLoginInfo] = useState<any>();
   const [verifing, setVerifing] = useState(false);
 
   const handleOk = (values: any) => {
@@ -39,10 +38,6 @@ const Login = () => {
       })
       .then((data) => {
         if (data.code === 420) {
-          setLoginInfo({
-            username: values.username,
-            password: values.password,
-          });
           setTwoFactor(true);
         } else {
           checkResponse(data);
@@ -59,7 +54,7 @@ const Login = () => {
     setVerifing(true);
     request
       .put(`${config.apiPrefix}user/two-factor/login`, {
-        data: { ...loginInfo, code: values.code },
+        data: { code: values.code },
       })
       .then((data: any) => {
         if (data.code === 430) {
@@ -77,7 +72,7 @@ const Login = () => {
 
   const checkResponse = (data: any) => {
     if (data.code === 200) {
-      const { token, lastip, lastaddr, lastlogon } = data.data;
+      const { token, lastip, lastaddr, lastlogon, retries = 0 } = data.data;
       localStorage.setItem(config.authKey, token);
       notification.success({
         message: '登录成功！',
@@ -89,6 +84,7 @@ const Login = () => {
             </div>
             <div>上次登录地点：{lastaddr || '-'}</div>
             <div>上次登录IP：{lastip || '-'}</div>
+            <div>上次登录状态：{retries > 0 ? `失败${retries}次` : '成功'}</div>
           </>
         ),
         duration: 5,
