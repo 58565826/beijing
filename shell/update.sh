@@ -244,9 +244,13 @@ usage() {
     echo -e "3. $cmd_update raw <fileurl>                                             # 更新单个脚本文件"
     echo -e "4. $cmd_update repo <repourl> <path> <blacklist> <dependence> <branch>   # 更新单个仓库的脚本"
     echo -e "5. $cmd_update rmlog <days>                                              # 删除旧日志"
-    echo -e "6. $cmd_update code                                                      # 获取互助码"
-    echo -e "7. $cmd_update bot                                                       # 启动tg-bot"
-    echo -e "8. $cmd_update check                                                     # 检测青龙环境并修复"
+    echo -e "6. $cmd_update bot                                                       # 启动tg-bot"
+    echo -e "7. $cmd_update check                                                     # 检测青龙环境并修复"
+    echo -e "8. $cmd_update resetlet                                                  # 重置登录错误次数"
+    echo -e "9. $cmd_update resettfa                                                  # 禁用两步登录"
+    echo -e "10 $cmd_update code                                                      # 获取互助码"
+    echo -e "11 $cmd_update cookie                                                    # 检测Cookie"
+
 }
 
 ## 更新qinglong
@@ -485,6 +489,17 @@ main() {
         [[ -f $task_error_log_path ]] && cat $task_error_log_path >>$log_path
         . $dir_shell/check.sh >>$log_path
         ;;
+    code)
+        echo -e "## 开始执行... $begin_time\n" >>$log_path
+        [[ -f $task_error_log_path ]] && cat $task_error_log_path >>$log_path
+        . $dir_shell/code.sh >>$log_path 
+        ;;
+    cookie)
+        echo -e "## 开始执行... $begin_time\n" >>$log_path
+        [[ -f $task_error_log_path ]] && cat $task_error_log_path >>$log_path
+        . $dir_shell/checkcookie.sh >>$log_path 
+        ;;
+
     resetlet)
         echo -e "## 开始执行... $begin_time\n" >>$log_path
         auth_value=$(cat $file_auth_user | jq '.retries =0' -c)
