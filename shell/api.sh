@@ -169,9 +169,7 @@ update_cron() {
     )
     code=$(echo $api | jq -r .code)
     message=$(echo $api | jq -r .message)
-    if [[ $code == 200 ]]; then
-        echo -e "更新任务状态成功"
-    else
+    if [[ $code != 200 ]]; then
         echo -e "\n## 更新任务状态失败(${message})\n" >> $log_path
     fi
 }
