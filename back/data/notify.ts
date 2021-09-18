@@ -23,6 +23,7 @@ export class GoCqHttpBotNotification extends NotificationBaseInfo {
 
 export class ServerChanNotification extends NotificationBaseInfo {
   public serverChanKey = '';
+  public SCKEY = '';
 }
 
 export class BarkNotification extends NotificationBaseInfo {
