@@ -79,7 +79,7 @@ export default class NotificationService {
   }
 
   private async serverChan() {
-    const { serverChanKey } = this.params;
+    const { serverChanKey, SCKEY } = this.params;
     const url = serverChanKey.includes('SCT')
       ? `https://sctapi.ftqq.com/${SCKEY}.send`
       : `https://sc.ftqq.com/${SCKEY}.send`;
