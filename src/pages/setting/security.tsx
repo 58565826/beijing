@@ -7,9 +7,9 @@ import QRCode from 'qrcode.react';
 
 const { Title, Link } = Typography;
 
-const SecuritySettings = ({ user }: any) => {
+const SecuritySettings = ({ user, userChange }: any) => {
   const [loading, setLoading] = useState(false);
-  const [twoFactorActived, setTwoFactorActived] = useState<boolean>();
+  const [twoFactorActivated, setTwoFactorActivated] = useState<boolean>();
   const [twoFactoring, setTwoFactoring] = useState(false);
   const [twoFactorInfo, setTwoFactorInfo] = useState<any>();
   const [code, setCode] = useState<string>();
@@ -32,7 +32,7 @@ const SecuritySettings = ({ user }: any) => {
   };
 
   const activeOrDeactiveTwoFactor = () => {
-    if (twoFactorActived) {
+    if (twoFactorActivated) {
       deactiveTowFactor();
     } else {
       getTwoFactorInfo();
@@ -45,7 +45,8 @@ const SecuritySettings = ({ user }: any) => {
       .put(`${config.apiPrefix}user/two-factor/deactive`)
       .then((data: any) => {
         if (data.data) {
-          setTwoFactorActived(false);
+          setTwoFactorActivated(false);
+          userChange();
         }
       })
       .catch((error: any) => {
@@ -54,18 +55,23 @@ const SecuritySettings = ({ user }: any) => {
   };
 
   const completeTowFactor = () => {
+    setLoading(true);
     request
       .put(`${config.apiPrefix}user/two-factor/active`, { data: { code } })
       .then((data: any) => {
         if (data.data) {
           message.success('激活成功');
           setTwoFactoring(false);
-          setTwoFactorActived(true);
+          setTwoFactorActivated(true);
+          userChange();
+        } else {
+          message.success('验证失败');
         }
       })
       .catch((error: any) => {
         console.log(error);
-      });
+      })
+      .finally(() => setLoading(false));
   };
 
   const getTwoFactorInfo = () => {
@@ -80,7 +86,7 @@ const SecuritySettings = ({ user }: any) => {
   };
 
   useEffect(() => {
-    setTwoFactorActived(user && user.twoFactorActived);
+    setTwoFactorActivated(user && user.twoFactorActivated);
   }, [user]);
 
   return twoFactoring ? (
@@ -118,7 +124,12 @@ const SecuritySettings = ({ user }: any) => {
           </Title>
           使用手机应用扫描二维码，或者输入秘钥 {twoFactorInfo?.secret}
           <div style={{ marginTop: 10 }}>
-            <QRCode value={twoFactorInfo?.url} />
+            <QRCode
+              style={{ border: '1px solid #21262d', borderRadius: 6 }}
+              includeMargin={true}
+              size={187}
+              value={twoFactorInfo?.url}
+            />
           </div>
           <Title style={{ marginTop: 5 }} level={5}>
             第三步
@@ -130,7 +141,7 @@ const SecuritySettings = ({ user }: any) => {
             onChange={(e) => setCode(e.target.value)}
             placeholder="123456"
           />
-          <Button type="primary" onClick={completeTowFactor}>
+          <Button type="primary" loading={loading} onClick={completeTowFactor}>
             完成设置
           </Button>
         </div>
@@ -187,10 +198,10 @@ const SecuritySettings = ({ user }: any) => {
       </div>
       <Button
         type="primary"
-        danger={twoFactorActived}
+        danger={twoFactorActivated}
         onClick={activeOrDeactiveTwoFactor}
       >
-        {twoFactorActived ? '禁用' : '启用'}
+        {twoFactorActivated ? '禁用' : '启用'}
       </Button>
     </>
   );

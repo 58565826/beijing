@@ -16,14 +16,13 @@ export default class CronService {
   private cronDb = new DataStore({ filename: config.cronDbFile });
 
   private queue = new PQueue({
-    concurrency: parseInt(process.env.MaxConcurrentNum) || 5,
+    concurrency: parseInt(process.env.MaxConcurrentNum as string) || 5,
   });
 
   constructor(@Inject('logger') private logger: winston.Logger) {
     this.cronDb.loadDatabase((err) => {
       if (err) throw err;
     });
-    this.cronDb.persistence.setAutocompactionInterval(30000);
   }
 
   public getDb(): DataStore {

@@ -140,7 +140,7 @@ const Env = ({ headerStyle, isPhone, theme }: any) => {
       key: 'status',
       dataIndex: 'status',
       align: 'center' as const,
-      width: 60,
+      width: 70,
       filters: [
         {
           text: '已启用',
@@ -280,7 +280,7 @@ const Env = ({ headerStyle, isPhone, theme }: any) => {
         <>
           确认删除变量{' '}
           <Text style={{ wordBreak: 'break-all' }} type="warning">
-            {record.value}
+            {record.name}: {record.value}
           </Text>{' '}
           吗
         </>
