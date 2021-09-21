@@ -40,7 +40,7 @@ export default class AuthService {
     const content = this.getAuthInfo();
     const timestamp = Date.now();
     if (content) {
-      const {
+      let {
         username: cUsername,
         password: cPassword,
         retries = 0,
@@ -48,7 +48,10 @@ export default class AuthService {
         lastip,
         lastaddr,
         twoFactorActivated,
+        twoFactorActived,
       } = content;
+      // patch old field
+      twoFactorActivated = twoFactorActivated || twoFactorActived;
 
       if (
         (cUsername === 'admin' && cPassword === 'admin') ||
@@ -101,7 +104,7 @@ export default class AuthService {
           '登陆通知',
           `你于${new Date(
             timestamp,
-          ).toLocaleString()}在 ${address} 登陆成功，ip地址 ${ip}"`,
+          ).toLocaleString()}在 ${address} 登陆成功，ip地址 ${ip}`,
         );
         await this.getLoginLog();
         await this.insertDb({
@@ -123,7 +126,7 @@ export default class AuthService {
           '登陆通知',
           `你于${new Date(
             timestamp,
-          ).toLocaleString()}在 ${address} 登陆失败，ip地址 ${ip}"`,
+          ).toLocaleString()}在 ${address} 登陆失败，ip地址 ${ip}`,
         );
         await this.getLoginLog();
         await this.insertDb({
@@ -237,6 +240,7 @@ export default class AuthService {
     const authInfo = this.getAuthInfo();
     this.updateAuthInfo(authInfo, {
       twoFactorActivated: false,
+      twoFactorActived: false,
       twoFactorSecret: '',
     });
     return true;
@@ -290,7 +294,7 @@ export default class AuthService {
     const isSuccess = await this.notificationService.testNotify(
       notificationInfo,
       '青龙',
-      `【蛟龙】您本次的验证码：${code}`,
+      `【蛟龙】测试通知 https://t.me/jiao_long`,
     );
     if (isSuccess) {
       const result = await this.updateNotificationDb({

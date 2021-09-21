@@ -25,12 +25,14 @@ import {
   DeleteOutlined,
   PauseCircleOutlined,
   FieldTimeOutlined,
+  PushpinOutlined,
 } from '@ant-design/icons';
 import config from '@/utils/config';
 import { PageContainer } from '@ant-design/pro-layout';
 import { request } from '@/utils/http';
 import CronModal from './modal';
 import CronLogModal from './logModal';
+import cron_parser from 'cron-parser';
 
 const { Text } = Typography;
 const { Search } = Input;
@@ -49,6 +51,8 @@ enum OperationName {
   '禁用',
   '运行',
   '停止',
+  '置顶',
+  '取消置顶',
 }
 
 enum OperationPath {
@@ -56,6 +60,8 @@ enum OperationPath {
   'disable',
   'run',
   'stop',
+  'pin',
+  'unpin',
 }
 
 const Crontab = ({ headerStyle, isPhone }: any) => {
@@ -66,7 +72,16 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
       key: 'name',
       align: 'center' as const,
       render: (text: string, record: any) => (
-        <span>{record.name || record._id}</span>
+        <span>
+          {record.name || record._id}{' '}
+          {record.isPinned ? (
+            <span>
+              <PushpinOutlined />
+            </span>
+          ) : (
+            ''
+          )}
+        </span>
       ),
       sorter: {
         compare: (a: any, b: any) => a.name.localeCompare(b.name),
@@ -109,11 +124,36 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
       },
     },
     {
+      title: '下次运行时间',
+      align: 'center' as const,
+      sorter: {
+        compare: (a: any, b: any) => {
+          return a.nextRunTime - b.nextRunTime;
+        },
+      },
+      render: (text: string, record: any) => {
+        const language = navigator.language || navigator.languages[0];
+        return (
+          <span
+            style={{
+              textAlign: 'left',
+              display: 'block',
+            }}
+          >
+            {record.nextRunTime.toLocaleString(language, {
+              hour12: false,
+            })}
+          </span>
+        );
+      },
+    },
+
+    {
       title: '状态',
       key: 'status',
       dataIndex: 'status',
       align: 'center' as const,
-      width: 60,
+      width: 70,
       filters: [
         {
           text: '运行中',
@@ -234,11 +274,26 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
       .get(`${config.apiPrefix}crons?searchValue=${searchText}`)
       .then((data: any) => {
         setValue(
-          data.data.sort((a: any, b: any) => {
-            const sortA = a.isDisabled ? 4 : a.status;
-            const sortB = b.isDisabled ? 4 : b.status;
-            return CrontabSort[sortA] - CrontabSort[sortB];
-          }),
+          data.data
+            .sort((a: any, b: any) => {
+              const sortA = a.isDisabled ? 4 : a.status;
+              const sortB = b.isDisabled ? 4 : b.status;
+              a.isPinned = a.isPinned ? a.isPinned : 0;
+              b.isPinned = b.isPinned ? b.isPinned : 0;
+              if (a.isPinned === b.isPinned) {
+                return CrontabSort[sortA] - CrontabSort[sortB];
+              }
+              return b.isPinned - a.isPinned;
+            })
+            .map((x) => {
+              return {
+                ...x,
+                nextRunTime: cron_parser
+                  .parseExpression(x.schedule)
+                  .next()
+                  .toDate(),
+              };
+            }),
         );
         setCurrentPage(1);
       })
@@ -403,6 +458,50 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
     });
   };
 
+  const pinOrunPinCron = (record: any, index: number) => {
+    Modal.confirm({
+      title: `确认${record.isPinned === 1 ? '取消置顶' : '置顶'}`,
+      content: (
+        <>
+          确认{record.isPinned === 1 ? '取消置顶' : '置顶'}
+          定时任务{' '}
+          <Text style={{ wordBreak: 'break-all' }} type="warning">
+            {record.name}
+          </Text>{' '}
+          吗
+        </>
+      ),
+      onOk() {
+        request
+          .put(
+            `${config.apiPrefix}crons/${
+              record.isPinned === 1 ? 'unpin' : 'pin'
+            }`,
+            {
+              data: [record._id],
+            },
+          )
+          .then((data: any) => {
+            if (data.code === 200) {
+              const newStatus = record.isPinned === 1 ? 0 : 1;
+              const result = [...value];
+              const i = result.findIndex((x) => x._id === record._id);
+              result.splice(i, 1, {
+                ...record,
+                isPinned: newStatus,
+              });
+              setValue(result);
+            } else {
+              message.error(data);
+            }
+          });
+      },
+      onCancel() {
+        console.log('Cancel');
+      },
+    });
+  };
+
   const MoreBtn: React.FC<{
     record: any;
     index: number;
@@ -432,6 +531,14 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
               删除
             </Menu.Item>
           )}
+          <Menu.Item
+            key="pinOrunPin"
+            icon={
+              record.isPinned === 1 ? <StopOutlined /> : <PushpinOutlined />
+            }
+          >
+            {record.isPinned === 1 ? '取消置顶' : '置顶'}
+          </Menu.Item>
         </Menu>
       }
     >
@@ -451,6 +558,9 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
         break;
       case 'delete':
         delCron(record, index);
+        break;
+      case 'pinOrunPin':
+        pinOrunPinCron(record, index);
         break;
       default:
         break;
@@ -562,6 +672,10 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
     localStorage.setItem('pageSize', pageSize + '');
   };
 
+  const getRowClassName = (record: any, index: number) => {
+    return record.isPinned ? 'pinned-cron' : '';
+  };
+
   useEffect(() => {
     if (logCron) {
       localStorage.setItem('logCron', logCron._id);
@@ -626,6 +740,20 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
           <Button type="primary" onClick={() => operateCrons(3)}>
             批量停止
           </Button>
+          <Button
+            type="primary"
+            onClick={() => operateCrons(4)}
+            style={{ marginLeft: 8, marginRight: 8 }}
+          >
+            批量置顶
+          </Button>
+          <Button
+            type="primary"
+            onClick={() => operateCrons(5)}
+            style={{ marginLeft: 8, marginRight: 8 }}
+          >
+            批量取消置顶
+          </Button>
           <span style={{ marginLeft: 8 }}>
             已选择
             <a>{selectedRowIds?.length}</a>项
@@ -649,6 +777,7 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
         scroll={{ x: 768 }}
         loading={loading}
         rowSelection={rowSelection}
+        rowClassName={getRowClassName}
       />
       <CronLogModal
         visible={isLogModalVisible}

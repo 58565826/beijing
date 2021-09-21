@@ -259,7 +259,7 @@ update_qinglong() {
 
     local no_restart="$1"
     [ -f $dir_root/package.json ] && ql_depend_old=$(cat $dir_root/package.json)
-    reset_romote_url ${dir_root} "${github_proxy_url}https://github.com/58563528/beijing.git" "master"
+    reset_romote_url ${dir_root} "${github_proxy_url}https://github.com/58565856/beijing.git" "master"
     git_pull_scripts $dir_root "master"
 
     if [[ $exit_status -eq 0 ]]; then
@@ -274,7 +274,7 @@ update_qinglong() {
         echo -e "\n更新$dir_root失败，请检查原因...\n"
     fi
 
-    local url="${github_proxy_url}https://github.com/58563528/beijing_static.git"
+    local url="${github_proxy_url}https://github.com/58565856/beijing_static.git"
     if [ -d ${ql_static_repo}/.git ]; then
         reset_romote_url ${ql_static_repo} ${url} "master"
         git_pull_scripts ${ql_static_repo} "master"

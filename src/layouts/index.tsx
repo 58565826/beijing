@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import ProLayout from '@ant-design/pro-layout';
+import ProLayout, { PageLoading } from '@ant-design/pro-layout';
 import {
   enable as enableDarkMode,
   disable as disableDarkMode,
@@ -50,15 +50,24 @@ export default function (props: any) {
     getUser(false);
   };
 
+  const setTheme = () => {
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const storageTheme = localStorage.getItem('qinglong_dark_theme');
+    const isDark =
+      (media.matches && storageTheme !== 'light') || storageTheme === 'dark';
+    if (isDark) {
+      document.body.setAttribute('data-dark', 'true');
+    } else {
+      document.body.setAttribute('data-dark', 'false');
+    }
+  };
+
   useEffect(() => {
     const isAuth = localStorage.getItem(config.authKey);
     if (!isAuth) {
       history.push('/login');
     }
     vhCheck();
-
-    // patch custome layout title as react node [object, object]
-    document.title = '控制面板';
   }, []);
 
   useEffect(() => {
@@ -66,6 +75,10 @@ export default function (props: any) {
       getUser();
     }
   }, [props.location.pathname]);
+
+  useEffect(() => {
+    setTheme();
+  }, [theme.theme]);
 
   useEffect(() => {
     const _theme = localStorage.getItem('qinglong_dark_theme') || 'auto';
@@ -89,11 +102,12 @@ export default function (props: any) {
     !navigator.userAgent.includes('Chrome');
   const isQQBrowser = navigator.userAgent.includes('QQBrowser');
 
-  return (
+  return loading ? (
+    <PageLoading />
+  ) : (
     <ProLayout
       selectedKeys={[props.location.pathname]}
       loading={loading}
-      className={theme.theme === 'vs-dark' ? 'dark' : 'white'}
       title={
         <>
           控制面板
@@ -133,7 +147,12 @@ export default function (props: any) {
           },
         ];
       }}
-      pageTitleRender={() => '控制面板'}
+      pageTitleRender={(props, pageName, info) => {
+        if (info) {
+          return `${info.pageName} - 控制面板`;
+        }
+        return '控制面板';
+      }}
       {...defaultProps}
     >
       {React.Children.map(props.children, (child) => {
@@ -142,6 +161,7 @@ export default function (props: any) {
           ...theme,
           user,
           reloadUser,
+          reloadTheme: setTheme,
         });
       })}
     </ProLayout>
