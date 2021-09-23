@@ -311,19 +311,21 @@ run_normal() {
     make_dir "$log_dir"
 
     local begin_time=$(date '+%Y-%m-%d %H:%M:%S')
+    local begin_timestamp=$(date "+%s" -d "$begin_time")
     eval echo -e "\#\# 开始执行... $begin_time\\\n" $cmd
     [[ -f $task_error_log_path ]] && eval cat $task_error_log_path $cmd
 
     local id=$(cat $list_crontab_user | grep -E "$cmd_task $first_param" | perl -pe "s|.*ID=(.*) $cmd_task $first_param\.*|\1|" | head -1 | awk -F " " '{print $1}')
-    [[ $id ]] && update_cron "\"$id\"" "0" "$$" "$log_path"
+    [[ $id ]] && update_cron "\"$id\"" "0" "$$" "$log_path" "$begin_timestamp"
     eval . $file_task_before "$@" $cmd
 
     eval timeout -k 10s $command_timeout_time $which_program $first_param $cmd
 
     eval . $file_task_after "$@" $cmd
-    [[ $id ]] && update_cron "\"$id\"" "1" "" "$log_path"
     local end_time=$(date '+%Y-%m-%d %H:%M:%S')
-    local diff_time=$(($(date +%s -d "$end_time") - $(date +%s -d "$begin_time")))
+    local end_timestamp=$(date "+%s" -d "$end_time")
+    local diff_time=$(( $end_timestamp - $begin_timestamp ))
+    [[ $id ]] && update_cron "\"$id\"" "1" "" "$log_path" "$begin_timestamp" "$diff_time"
     eval echo -e "\\\n\#\# 执行结束... $end_time  耗时 $diff_time 秒" $cmd
 }
 
@@ -348,11 +350,13 @@ run_concurrent() {
     make_dir $log_dir
 
     local begin_time=$(date '+%Y-%m-%d %H:%M:%S')
+    local begin_timestamp=$(date "+%s" -d "$begin_time")
+
     eval echo -e "\#\# 开始执行... $begin_time\\\n" $cmd
     [[ -f $task_error_log_path ]] && eval cat $task_error_log_path $cmd
 
     local id=$(cat $list_crontab_user | grep -E "$cmd_task $first_param" | perl -pe "s|.*ID=(.*) $cmd_task $first_param\.*|\1|" | head -1 | awk -F " " '{print $1}')
-    [[ $id ]] && update_cron "\"$id\"" "0" "$$" "$log_path"
+    [[ $id ]] && update_cron "\"$id\"" "0" "$$" "$log_path" "$begin_timestamp"
     eval . $file_task_before "$@" $cmd
     echo -e "\n各账号间已经在后台开始并发执行，前台不输入日志，日志直接写入文件中。\n" >> $log_path
 
@@ -373,9 +377,10 @@ run_concurrent() {
     done
 
     eval . $file_task_after "$@" $cmd
-    [[ $id ]] && update_cron "\"$id\"" "1" "" "$log_path"
     local end_time=$(date '+%Y-%m-%d %H:%M:%S')
-    local diff_time=$(($(date +%s -d "$end_time") - $(date +%s -d "$begin_time")))
+    local end_timestamp=$(date "+%s" -d "$end_time")
+    local diff_time=$(( $end_timestamp - $begin_timestamp ))
+    [[ $id ]] && update_cron "\"$id\"" "1" "" "$log_path" "$begin_timestamp" "$diff_time"
     eval echo -e "\\\n\#\# 执行结束... $end_time  耗时 $diff_time 秒" $cmd
 }
 
@@ -390,19 +395,22 @@ run_else() {
     make_dir "$log_dir"
 
     local begin_time=$(date '+%Y-%m-%d %H:%M:%S')
+    local begin_timestamp=$(date "+%s" -d "$begin_time")
+
     eval echo -e "\#\# 开始执行... $begin_time\\\n" $cmd
     [[ -f $task_error_log_path ]] && eval cat $task_error_log_path $cmd
 
     local id=$(cat $list_crontab_user | grep -E "$cmd_task $first_param" | perl -pe "s|.*ID=(.*) $cmd_task $first_param\.*|\1|" | head -1 | awk -F " " '{print $1}')
-    [[ $id ]] && update_cron "\"$id\"" "0" "$$" "$log_path"
+    [[ $id ]] && update_cron "\"$id\"" "0" "$$" "$log_path" "$begin_timestamp"
     eval . $file_task_before "$@" $cmd
 
     eval timeout -k 10s $command_timeout_time "$@" $cmd
 
     eval . $file_task_after "$@" $cmd
-    [[ $id ]] && update_cron "\"$id\"" "1" "" "$log_path"
     local end_time=$(date '+%Y-%m-%d %H:%M:%S')
-    local diff_time=$(($(date +%s -d "$end_time") - $(date +%s -d "$begin_time")))
+    local end_timestamp=$(date "+%s" -d "$end_time")
+    local diff_time=$(( $end_timestamp - $begin_timestamp ))
+    [[ $id ]] && update_cron "\"$id\"" "1" "" "$log_path" "$begin_timestamp" "$diff_time"
     eval echo -e "\\\n\#\# 执行结束... $end_time  耗时 $diff_time 秒" $cmd
 }
 
