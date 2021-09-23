@@ -1,6 +1,6 @@
 ## Version: v2.8.0
 ## Date: 2021-06-20
-## Mod: Build20210829-001
+## Mod: Build20210905-002
 ## Update Content: 可持续发展纲要\n1. session管理破坏性修改\n2. 配置管理可编辑config下文件\n3. 自定义脚本改为查看脚本\n4. 移除互助相关
 
 ## 上面版本号中，如果第2位数字有变化，那么代表增加了新的参数，如果只有第3位数字有变化，仅代表更新了注释，没有增加新的参数，可更新可不更新
@@ -12,7 +12,7 @@ AutoDelCron="true"
 AutoAddCron="true"
 
 ## 拉取脚本时默认的定时规则，当匹配不到定时规则时使用，例如: 0 9 * * *
-DefaultCronRule=""
+DefaultCronRule="37 0 * * *"
 
 ## ql repo命令拉取脚本时需要拉取的文件后缀，直接写文件后缀名即可
 RepoFileExtensions="js py ts"
@@ -296,7 +296,7 @@ UpdateType="1"
 ## 定义是否自动安装或修复缺失的依赖，默认为1，表示自动修复；留空或其他数值表示不修复。
 FixDependType="1"
 ## 定义监控修复的依赖名称
-package_name="canvas png-js date-fns axios crypto-js ts-md5 tslib @types/node dotenv typescript fs require tslib"
+package_name="canvas png-js date-fns axios crypto-js ts-md5 tslib @types/node dotenv typescript fs require tslib jsdom"
 
 ## 预设的仓库及默认调用仓库设置
 ## 将"repo=$repo1"改成repo=$repo2"或其他，以默认调用其他仓库脚本日志
@@ -717,8 +717,11 @@ export guaopencard_addSku10="true" ##加购物车
 j=30
 for (( i = 11; i <= j; i++ )); do
     export guaopencard$i="true"
+    export guaopencardRun$i="true"
     export guaopencard_addSku$i="true"
 done
+## 39、秋新资联合开卡
+export guaopencardRun17="true" ##开卡任务
 
 # cdle 环境变量
 ## 1、全民运动会守卫红包
@@ -824,3 +827,39 @@ export JD_OPENCARD_EAT_OPEN_OPENCARD=""
 ## 8、8.5-8.12 大牌联合 冰爽一夏 钜惠送好礼
 ### 填写11就是跑到11个ck就停止，填写21就是跑到21个ck就停止，一天最多助力20个ck，推荐10的倍数 +1 填写！！
 export JD_OPENCARD_COOL_SUMMER2=""
+
+# ccwav 环境变量
+## [1] jd_CheckCK.js
+### 当有自动禁用或自动启用事件发生才会发送通知，如果要每次都通知则需设定变量
+### 自动检测账号是否正常，不正常的自动禁用，正常的如果是禁用状态则自动启用
+export SHOWSUCCESSCK="false" ##显示正常CK，true为显示
+export CKALWAYSNOTIFY="false" ##通知CK状态，true为永远通知 
+export CKAUTOENABLE="true" ##自动启用CK，false为停用
+export CKREMARK="true" #显示CK备注，false为不显示
+## [2] jd_bean_change.js
+### 自用的京东资产变动查询加强版
+export BEANCHANGE_PERSENT="10" ##10合1
+## [3] sendNotify.js
+### 1. 通知黑名单
+### 如果通知标题在此变量里面存在（&隔开），则用屏蔽不发送通知，继承Ninja。例：export NOTIFY_SKIP_LIST="京东CK检测&京东资产变动"
+export NOTIFY_SKIP_LIST=""
+### 2. 第2套通知
+### 如果通知标题在此变量里面存在（&隔开），则用第2套推送变量进行配置。例：export NOTIFY_GROUP_LIST="京东CK检测&京东资产变动&Ninja 运行通知"
+### 以企业微信为例，企业微信配置了 QYWX_AM 和 QYWX_AM2，则执行京东资产变动时会推送到 QYWX_AM2 配置的企业微信
+export NOTIFY_GROUP_LIST=""
+### 3. REMARK处理
+### 例：账号名:ccwav  别名:ccwav的别名  Remark:代码玩家
+export SHOWREMARKTYPE="1"    ##效果: 账号名称：代码玩家
+#export SHOWREMARKTYPE="2"   ##效果: 账号名称：ccwav的别名(代码玩家)
+#export SHOWREMARKTYPE="3"   ##不做处理，效果: 账号名称：ccwav   
+#export SHOWREMARKTYPE="4"   ##不做处理，效果: 账号名称：ccwav(代码玩家)
+### 4. REAMARK跳过
+### 单独指定某些脚本不做REMARK处理，京东CK检测加了处理Remark，所以最好是加上不处理
+export NOTIFY_SKIP_REMARK_LIST="京东CK检测"
+### 5. 第2套兑换通知
+### 东东农场 东东萌宠 京喜工厂，这三个任务接收到产品可以兑换通知时推送到群组2
+### 以企业微信为例，企业微信配置了 QYWX_AM 和 QYWX_AM2，则发送兑换通知时会推送到 QYWX_AM2 配置的企业微信
+export NOTIFY_COMPTOGROUP2="false" ##true为推送到群组2
+### 6. 屏蔽ck失效通知
+### 执行东东农场等脚本时有CK失效也不会推送ck失效通知
+export NOTIFY_NOCKFALSE="true"

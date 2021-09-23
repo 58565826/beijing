@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Build 20210830-001
+## Build 20210906-001
 
 ## 导入通用变量与函数
 dir_shell=/ql/shell
@@ -549,7 +549,7 @@ latest_log=$(date "+%Y-%m-%d-%H-%M-%S")
 latest_log_path="$dir_code/$latest_log"
 make_dir "$dir_code"
 ps_num="$(ps | grep code.sh | grep -v grep | wc -l)"
-export_all_codes | perl -pe "{s|京东种豆|种豆|; s|crazyJoy任务|疯狂的JOY|}"| tee $latest_log_path
+export_all_codes | perl -pe "{s|京东种豆|种豆|; s|crazyJoy任务|疯狂的JOY|}"
 sleep 5
 update_help
 
