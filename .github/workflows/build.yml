@@ -18,7 +18,10 @@ jobs:
           yarn install
           yarn build
           yarn build-back
-        
+      - name: 创建当前时间戳
+        id: create_timestamp
+        run: echo "::set-output name=timestamp::$(date '+%Y%m%d%H%M%s')"
+        shell: bash        
       - name: copy to static repo
         env: 
           # GITHUB_REPO: gitee.com/jizhuni_kk/beijing_static
@@ -30,5 +33,7 @@ jobs:
           git init && git add .
           git config user.name "58565856"
           git config user.email "58565856@@users.noreply.github.com"
-          git commit --allow-empty -m "copy static at $(date +'%Y-%m-%d %H:%M:%S')"
+          # git commit --allow-empty -m "copy static at $(date +'%Y-%m-%d %H:%M:%S')"
+          git commit --allow-empty -m "copy static at ${{ steps.create_timestamp.outputs.timestamp }}"
+	  
           git push --force --quiet "https://${{ secrets.DOCKER_USERNAME }}:${{ secrets.API_TOKEN }}@${GITHUB_REPO}.git" master:master
