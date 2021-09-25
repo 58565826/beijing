@@ -1,16 +1,16 @@
 import { Service, Inject } from 'typedi';
 import winston from 'winston';
-import { createRandomString, getNetIp } from '../config/util';
+import { createRandomString, getNetIp, getPlatform } from '../config/util';
 import config from '../config';
 import * as fs from 'fs';
 import _ from 'lodash';
 import jwt from 'jsonwebtoken';
 import { authenticator } from '@otplib/preset-default';
-import { exec } from 'child_process';
 import DataStore from 'nedb';
 import { AuthDataType, AuthInfo, LoginStatus } from '../data/auth';
 import { NotificationInfo } from '../data/notify';
 import NotificationService from './notify';
+import { Request } from 'express';
 
 @Service()
 export default class AuthService {
@@ -29,7 +29,7 @@ export default class AuthService {
       username: string;
       password: string;
     },
-    req: any,
+    req: Request,
     needTwoFactor = true,
   ): Promise<any> {
     if (!fs.existsSync(config.authConfigFile)) {
@@ -49,6 +49,8 @@ export default class AuthService {
         lastaddr,
         twoFactorActivated,
         twoFactorActived,
+        tokens = {},
+        platform,
       } = content;
       // patch old field
       twoFactorActivated = twoFactorActivated || twoFactorActived;
@@ -94,26 +96,37 @@ export default class AuthService {
 
         this.updateAuthInfo(content, {
           token,
+          tokens: {
+            ...tokens,
+            [req.platform]: token,
+          },
           lastlogon: timestamp,
           retries: 0,
           lastip: ip,
           lastaddr: address,
+          platform: req.platform,
           isTwoFactorChecking: false,
         });
         await this.notificationService.notify(
           '登陆通知',
-          `你于${new Date(
-            timestamp,
-          ).toLocaleString()}在 ${address} 登陆成功，ip地址 ${ip}`,
+          `你于${new Date(timestamp).toLocaleString()}在 ${address} ${
+            req.platform
+          }端 登陆成功，ip地址 ${ip}`,
         );
         await this.getLoginLog();
         await this.insertDb({
           type: AuthDataType.loginLog,
-          info: { timestamp, address, ip, status: LoginStatus.success },
+          info: {
+            timestamp,
+            address,
+            ip,
+            platform: req.platform,
+            status: LoginStatus.success,
+          },
         });
         return {
           code: 200,
-          data: { token, lastip, lastaddr, lastlogon, retries },
+          data: { token, lastip, lastaddr, lastlogon, retries, platform },
         };
       } else {
         this.updateAuthInfo(content, {
@@ -121,17 +134,24 @@ export default class AuthService {
           lastlogon: timestamp,
           lastip: ip,
           lastaddr: address,
+          platform: req.platform,
         });
         await this.notificationService.notify(
           '登陆通知',
-          `你于${new Date(
-            timestamp,
-          ).toLocaleString()}在 ${address} 登陆失败，ip地址 ${ip}`,
+          `你于${new Date(timestamp).toLocaleString()}在 ${address} ${
+            req.platform
+          }端 登陆失败，ip地址 ${ip}`,
         );
         await this.getLoginLog();
         await this.insertDb({
           type: AuthDataType.loginLog,
-          info: { timestamp, address, ip, status: LoginStatus.fail },
+          info: {
+            timestamp,
+            address,
+            ip,
+            platform: req.platform,
+            status: LoginStatus.fail,
+          },
         });
         return { code: 400, message: config.authError };
       }
@@ -214,7 +234,14 @@ export default class AuthService {
     return isValid;
   }
 
-  public async twoFactorLogin({ username, password, code }, req) {
+  public async twoFactorLogin(
+    {
+      username,
+      password,
+      code,
+    }: { username: string; password: string; code: string },
+    req: any,
+  ) {
     const authInfo = this.getAuthInfo();
     const { isTwoFactorChecking, twoFactorSecret } = authInfo;
     if (!isTwoFactorChecking) {
@@ -231,6 +258,7 @@ export default class AuthService {
       this.updateAuthInfo(authInfo, {
         lastip: ip,
         lastaddr: address,
+        platform: req.platform,
       });
       return { code: 430, message: '验证失败' };
     }

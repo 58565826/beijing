@@ -71,6 +71,7 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
       title: '任务名',
       dataIndex: 'name',
       key: 'name',
+      width: 150,
       align: 'center' as const,
       render: (text: string, record: any) => (
         <span>
@@ -93,7 +94,7 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
       title: '任务',
       dataIndex: 'command',
       key: 'command',
-      width: '40%',
+      width: 250,
       align: 'center' as const,
       render: (text: string, record: any) => {
         return (
@@ -118,6 +119,7 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
       title: '任务定时',
       dataIndex: 'schedule',
       key: 'schedule',
+      width: 110,
       align: 'center' as const,
       sorter: {
         compare: (a: any, b: any) => a.schedule.localeCompare(b.schedule),
@@ -127,6 +129,7 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
     {
       title: '最后运行时间',
       align: 'center' as const,
+      width: 150,
       sorter: {
         compare: (a: any, b: any) => {
           return a.last_execution_time - b.last_execution_time;
@@ -137,7 +140,6 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
         return (
           <span
             style={{
-              textAlign: 'left',
               display: 'block',
             }}
           >
@@ -156,6 +158,7 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
     {
       title: '最后运行时长',
       align: 'center' as const,
+      width: 120,
       sorter: {
         compare: (a: any, b: any) => {
           return a.last_running_time - b.last_running_time;
@@ -166,7 +169,6 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
         return (
           <span
             style={{
-              textAlign: 'left',
               display: 'block',
             }}
           >
@@ -180,6 +182,7 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
     {
       title: '下次运行时间',
       align: 'center' as const,
+      width: 150,
       sorter: {
         compare: (a: any, b: any) => {
           return a.nextRunTime - b.nextRunTime;
@@ -190,7 +193,6 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
         return (
           <span
             style={{
-              textAlign: 'left',
               display: 'block',
             }}
           >
@@ -207,7 +209,7 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
       key: 'status',
       dataIndex: 'status',
       align: 'center' as const,
-      width: 70,
+      width: 85,
       filters: [
         {
           text: '运行中',
@@ -269,6 +271,7 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
       title: '操作',
       key: 'action',
       align: 'center' as const,
+      width: 90,
       render: (text: string, record: any, index: number) => {
         const isPc = !isPhone;
         return (
@@ -635,6 +638,10 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
   const handleCrons = (cron: any) => {
     const index = value.findIndex((x) => x._id === cron._id);
     const result = [...value];
+    cron.nextRunTime = cron_parser
+      .parseExpression(cron.schedule)
+      .next()
+      .toDate();
     if (index === -1) {
       result.unshift(cron);
     } else {
@@ -651,6 +658,10 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
       .then((data: any) => {
         const index = value.findIndex((x) => x._id === cron._id);
         const result = [...value];
+        data.data.nextRunTime = cron_parser
+          .parseExpression(data.data.schedule)
+          .next()
+          .toDate();
         result.splice(index, 1, {
           ...cron,
           ...data.data,
@@ -828,7 +839,7 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
         dataSource={value}
         rowKey="_id"
         size="middle"
-        scroll={{ x: 768 }}
+        scroll={{ x: 1000 }}
         loading={loading}
         rowSelection={rowSelection}
         rowClassName={getRowClassName}
