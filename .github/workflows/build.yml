@@ -35,5 +35,4 @@ jobs:
           git config user.email "58565856@@users.noreply.github.com"
           # git commit --allow-empty -m "copy static at $(date +'%Y-%m-%d %H:%M:%S')"
           git commit --allow-empty -m "copy static at ${{ steps.create_timestamp.outputs.timestamp }}"
-	  
           git push --force --quiet "https://${{ secrets.DOCKER_USERNAME }}:${{ secrets.API_TOKEN }}@${GITHUB_REPO}.git" master:master
