@@ -32,7 +32,6 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
     && git clone -b ${QL_BRANCH} ${QL_URL} ${QL_DIR} \
     && git config --global user.email "58565856@@users.noreply.github.com" \
     && git config --global user.name "58565856" \
-    && git config --global pull.rebase true \
     && cd ${QL_DIR} \
     && cp -f .env.example .env \
     && chmod 777 ${QL_DIR}/shell/*.sh \
