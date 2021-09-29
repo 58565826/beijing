@@ -38,6 +38,11 @@ export default async () => {
   const cronService = Container.get(CronService);
   const envService = Container.get(EnvService);
   const cronDb = cronService.getDb();
+  const envDb = cronService.getDb();
+
+  // compaction data file
+  cronDb.persistence.compactDatafile();
+  envDb.persistence.compactDatafile();
 
   cronDb.count({}, async (err, count) => {
     if (count === 0) {
@@ -104,7 +109,7 @@ export default async () => {
 };
 
 function randomSchedule(from: number, to: number) {
-  const result = [];
+  const result: any[] = [];
   const arr = [...Array(from).keys()];
   let count = arr.length;
   for (let i = 0; i < to; i++) {
