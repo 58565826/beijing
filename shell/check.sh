@@ -118,7 +118,7 @@ init_git() {
 
 main() {
   echo -e "=====> 开始检测"
-  init_git
+  #init_git
   copy_dep
   check_ql
   check_nginx
