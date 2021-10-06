@@ -158,7 +158,7 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
     {
       title: '最后运行时长',
       align: 'center' as const,
-      width: 150,
+      width: 120,
       sorter: {
         compare: (a: any, b: any) => {
           return a.last_running_time - b.last_running_time;
