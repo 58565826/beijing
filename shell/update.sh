@@ -430,6 +430,18 @@ get_uniq_path() {
 }
 
 main() {
+    ## for ql update
+    show_log="false"
+    while getopts ":l" opt
+    do
+        case $opt in
+            l)
+                show_log="true"
+                ;;
+        esac
+    done
+    [[ "$show_log" == "true" ]] && shift $(($OPTIND - 1))
+
     local p1=$1
     local p2=$2
     local p3=$3
@@ -439,11 +451,14 @@ main() {
     local log_time=$(date "+%Y-%m-%d-%H-%M-%S")
     local log_path="$dir_log/update/${log_time}_$p1.log"
     local begin_time=$(date '+%Y-%m-%d %H:%M:%S')
+
     case $p1 in
     update)
-        echo -e "## 开始执行... $begin_time\n" >>$log_path
-        [[ -f $task_error_log_path ]] && cat $task_error_log_path >>$log_path
-        update_qinglong "$2" >>$log_path
+        cmd=">> $log_path 2>&1"
+        [[ "$show_log" == "true" ]] && cmd=""
+        eval echo -e "## 开始执行... $begin_time\n" $cmd
+        [[ -f $task_error_log_path ]] && eval cat $task_error_log_path $cmd
+        eval update_qinglong "$2" $cmd
         ;;
     extra)
         echo -e "## 开始执行... $begin_time\n" >>$log_path

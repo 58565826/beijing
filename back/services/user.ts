@@ -380,31 +380,38 @@ export default class UserService {
 
   public async checkUpdate() {
     try {
-      const { version } = await import(config.versionFile);
-      const lastVersionFileContent = await got.get(config.lastVersionFile);
-      const filePath = `${config.rootPath}/.version.ts`;
-      fs.writeFileSync(filePath, lastVersionFileContent.body, {
-        encoding: 'utf-8',
-      });
-      const result = await import(config.versionFile);
+      const versionRegx = /.*export const version = \'(.*)\'\;/;
+      const logRegx = /.*export const changeLog = \`(.*)\`\;/;
+
+      const currentVersionFile = fs.readFileSync(config.versionFile, 'utf8');
+      const currentVersion = currentVersionFile.match(versionRegx)![1];
+
+      const lastVersionFileContent = await (
+        await got.get(config.lastVersionFile)
+      ).body;
+      const lastVersion = lastVersionFileContent.match(versionRegx)![1];
+      const lastLog = lastVersionFileContent.match(logRegx)
+        ? lastVersionFileContent.match(logRegx)![1]
+        : '';
 
       return {
         code: 200,
         data: {
-          hasNewVersion: version !== result.version,
-          ...result,
+          hasNewVersion: currentVersion !== lastVersion,
+          lastVersion,
+          lastLog,
         },
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         code: 400,
-        data: '获取版本文件失败',
+        data: error.message,
       };
     }
   }
 
   public async updateSystem() {
-    const cp = spawn('ql update', { shell: '/bin/bash' });
+    const cp = spawn('ql -l update', { shell: '/bin/bash' });
 
     cp.stdout.on('data', (data) => {
       this.sockService.sendMessage(data.toString());
