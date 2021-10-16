@@ -40,7 +40,8 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
     && pnpm install -g pm2 \
     && pnpm install -g ts-node typescript tslib \
     && mkdir -p /ql/log \
-    && echo "" > /ql/log/task_error.log \    && rm -rf /root/.npm \
+    && echo "" > /ql/log/task_error.log \    
+    && rm -rf /root/.npm \
     && pnpm install --prod \
     && rm -rf /root/.pnpm-store \
     && git clone -b ${QL_BRANCH} https://github.com/58565856/beijing_static.git /static \
