@@ -4,25 +4,12 @@
   </a>
 </p>
 
-<h1 align="center">青龙(WIP)</h1>
+<h1 align="center">青龙</h1>
 
 <div align="center">
 
 Python/JavaScript/Shell/Typescript 定时任务管理
 
-# 青龙2.2-066 去升级版本 
-  
-```
-  docker run -dit \
-   -v $PWD/ql2/config:/ql/config \
-   -v $PWD/ql2/log:/ql/log \
-   -v $PWD/ql2/db:/ql/db \
-   -p 5700:5700 \
-   --name ql2 \
-   --hostname ql2 \
-   --restart always \
-   limoe/qinglong:latest
- ```
 [![docker version][docker-version-image]][docker-version-url] [![docker pulls][docker-pulls-image]][docker-pulls-url] [![docker stars][docker-stars-image]][docker-stars-url] [![docker image size][docker-image-size-image]][docker-image-size-url] [![donate][donate-image]][donate-url]
 
 [donate-image]: https://img.shields.io/badge/donate-wechat-green?style=flat
