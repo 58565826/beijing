@@ -115,7 +115,10 @@ export default {
       },
       { label: 'telegramBotProxyHost', tip: '代理IP' },
       { label: 'telegramBotProxyPort', tip: '代理端口' },
-      { label: 'telegramBotProxyAuth', tip: 'telegram代理配置认证参数' },
+      {
+        label: 'telegramBotProxyAuth',
+        tip: 'telegram代理配置认证参数, 用户名与密码用英文冒号连接 user:password',
+      },
       {
         label: 'telegramBotApiHost',
         tip: 'telegram api自建的反向代理地址，默认tg官方api',
@@ -185,4 +188,5 @@ export default {
     '/log': '任务日志',
     '/setting': '系统设置',
   },
+  dependenceTypes: ['nodejs', 'python3', 'linux'],
 };

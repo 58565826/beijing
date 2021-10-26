@@ -6,7 +6,7 @@ import { version } from '../../version';
 
 const { Countdown } = Statistic;
 
-const CheckUpdate = ({ ws }: any) => {
+const CheckUpdate = ({ socketMessage }: any) => {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [value, setValue] = useState('');
   const modalRef = useRef<any>();
@@ -92,7 +92,6 @@ const CheckUpdate = ({ ws }: any) => {
             style={{
               wordBreak: 'break-all',
               whiteSpace: 'pre-wrap',
-              paddingTop: 15,
               fontSize: 12,
               fontWeight: 400,
             }}
@@ -105,50 +104,63 @@ const CheckUpdate = ({ ws }: any) => {
   };
 
   useEffect(() => {
-    ws.onmessage = (e) => {
-      setValue(value + e.data);
-      modalRef.current.update({
+    if (!modalRef.current || !socketMessage) {
+      return;
+    }
+    const { type, message, references } = socketMessage;
+
+    if (type !== 'updateSystemVersion') {
+      return;
+    }
+
+    const newMessage = `${value} \n ${message}`;
+    modalRef.current.update({
+      content: (
+        <div style={{ height: '60vh', overflowY: 'auto' }}>
+          <pre
+            style={{
+              wordBreak: 'break-all',
+              whiteSpace: 'pre-wrap',
+              fontSize: 12,
+              fontWeight: 400,
+            }}
+          >
+            {newMessage}
+          </pre>
+          <div id="log-identifier" style={{ paddingBottom: 5 }}></div>
+        </div>
+      ),
+    });
+    setValue(newMessage);
+
+    document.getElementById('log-identifier') &&
+      document
+        .getElementById('log-identifier')!
+        .scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    if (newMessage.includes('重启面板')) {
+      message.warning({
         content: (
-          <div style={{ height: '60vh', overflowY: 'auto' }}>
-            <pre
-              style={{
-                wordBreak: 'break-all',
-                whiteSpace: 'pre-wrap',
-                paddingTop: 15,
-                fontSize: 12,
-                fontWeight: 400,
-              }}
-            >
-              {value + e.data}
-            </pre>
-          </div>
+          <span>
+            系统将在
+            <Countdown
+              className="inline-countdown"
+              format="ss"
+              value={Date.now() + 1000 * 10}
+            />
+            秒后自动刷新
+          </span>
         ),
+        duration: 10,
       });
-      if (e.data.includes('重启面板')) {
-        message.warning({
-          content: (
-            <span>
-              系统将在
-              <Countdown
-                className="inline-countdown"
-                format="ss"
-                value={Date.now() + 1000 * 10}
-              />
-              秒后自动刷新
-            </span>
-          ),
-          duration: 10,
-        });
-        setTimeout(() => {
-          window.location.reload();
-        }, 10000);
-      }
-    };
-  }, []);
+      setTimeout(() => {
+        window.location.reload();
+      }, 10000);
+    }
+  }, [socketMessage]);
 
   return (
     <>
-      {value}
       <Button type="primary" onClick={checkUpgrade}>
         检查更新
       </Button>
