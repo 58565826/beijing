@@ -12,6 +12,10 @@ export default async ({ server }: { server: Server }) => {
   const sockService = Container.get(SockService);
 
   echo.on('connection', (conn) => {
+    if (!conn.headers || !conn.url || !conn.pathname) {
+      conn.close('404');
+    }
+
     const data = fs.readFileSync(config.authConfigFile, 'utf8');
     const platform = getPlatform(conn.headers['user-agent'] || '') || 'desktop';
     const headerToken = conn.url.replace(`${conn.pathname}?token=`, '');
