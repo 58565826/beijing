@@ -361,9 +361,6 @@ const Script = ({ headerStyle, isPhone, theme }: any) => {
                   icon={<DeleteOutlined />}
                 />
               </Tooltip>,
-              // <Tooltip title="下载">
-              //   <Button type="primary" onClick={downloadFile} icon={<DownloadOutlined />} />
-              // </Tooltip>,
               <Button
                 type="primary"
                 onClick={() => {
