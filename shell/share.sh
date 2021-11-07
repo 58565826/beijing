@@ -224,12 +224,11 @@ fix_config() {
 ## npm install 子程序，判断是否为安卓，判断是否安装有pnpm
 npm_install_sub() {
     if [[ $is_termux -eq 1 ]]; then
-        npm install --production --no-save --no-bin-links --registry=https://registry.npm.taobao.org || npm install --production --no-bin-links --no-save
+        npm install --production --no-bin-links --registry=https://registry.npm.taobao.org || npm install --production --no-bin-links
     elif ! type pnpm &>/dev/null; then
-        npm install --production --no-save --registry=https://registry.npm.taobao.org || npm install --production --no-save
+        npm install --production --registry=https://registry.npm.taobao.org || npm install --production
     else
-        echo -e "检测到本机安装了 pnpm，使用 pnpm 替代 ...\n"
-        pnpm install --prod
+        pnpm install --production --registry=https://registry.npm.taobao.org || pnpm install --production
     fi
 }
 
