@@ -8,7 +8,7 @@ ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     PS1="\u@\h:\w \$ " \
     QL_DIR=/ql
 WORKDIR ${QL_DIR}
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories \
     && apk update -f \
     && apk upgrade \
     && apk --no-cache add -f bash \
@@ -24,11 +24,11 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
                              python3 \
                              jq \
                              openssh \
+                             py3-pip \
     && rm -rf /var/cache/apk/* \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo "Asia/Shanghai" > /etc/timezone \
     && touch ~/.bashrc \
-    && mkdir /run/nginx \
     && git clone -b ${QL_BRANCH} ${QL_URL} ${QL_DIR} \
     && git config --global user.email "58565856@@users.noreply.github.com" \
     && git config --global user.name "58565856" \

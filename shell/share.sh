@@ -135,7 +135,7 @@ link_shell() {
 ## 定义各命令
 define_cmd() {
     local cmd_prefix cmd_suffix
-    if type task >/dev/null 2>&1; then
+    if type task &>/dev/null; then
         cmd_suffix=""
         if [[ -x "$dir_shell/task.sh" ]]; then
             cmd_prefix=""
@@ -225,7 +225,7 @@ fix_config() {
 npm_install_sub() {
     if [[ $is_termux -eq 1 ]]; then
         npm install --production --no-save --no-bin-links --registry=https://registry.npm.taobao.org || npm install --production --no-bin-links --no-save
-    elif ! type pnpm >/dev/null 2>&1; then
+    elif ! type pnpm &>/dev/null; then
         npm install --production --no-save --registry=https://registry.npm.taobao.org || npm install --production --no-save
     else
         echo -e "检测到本机安装了 pnpm，使用 pnpm 替代 ...\n"
@@ -275,12 +275,6 @@ update_depend() {
     if [[ ! -s $dir_scripts/package.json ]] || [[ $(diff $dir_sample/package.json $dir_scripts/package.json) ]]; then
         cp -f $dir_sample/package.json $dir_scripts/package.json
         npm_install_2 $dir_scripts
-    fi
-
-    if [[ ! -s $dir_scripts/requirements.txt ]] || [[ $(diff $dir_sample/requirements.txt $dir_scripts/requirements.txt) ]]; then
-        cp -f $dir_sample/requirements.txt $dir_scripts/requirements.txt
-        cd $dir_scripts
-        pip3 install -r $dir_scripts/requirements.txt
     fi
 
     cd $dir_current

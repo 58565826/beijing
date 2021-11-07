@@ -146,12 +146,11 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
             }}
           >
             {record.last_execution_time
-              ? new Date(record.last_execution_time * 1000).toLocaleString(
-                  language,
-                  {
+              ? new Date(record.last_execution_time * 1000)
+                  .toLocaleString(language, {
                     hour12: false,
-                  },
-                )
+                  })
+                  .replace(' 24:', ' 00:')
               : '-'}
           </span>
         );
@@ -160,7 +159,7 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
     {
       title: '最后运行时长',
       align: 'center' as const,
-      width: 150,
+      width: 120,
       sorter: {
         compare: (a: any, b: any) => {
           return a.last_running_time - b.last_running_time;
@@ -198,9 +197,11 @@ const Crontab = ({ headerStyle, isPhone }: any) => {
               display: 'block',
             }}
           >
-            {record.nextRunTime.toLocaleString(language, {
-              hour12: false,
-            })}
+            {record.nextRunTime
+              .toLocaleString(language, {
+                hour12: false,
+              })
+              .replace(' 24:', ' 00:')}
           </span>
         );
       },
