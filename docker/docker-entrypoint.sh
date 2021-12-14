@@ -4,10 +4,10 @@ dir_shell=/ql/shell
 . $dir_shell/share.sh
 link_shell
 
-set -e
 echo -e "======================1. 检测配置文件========================\n"
 #fix_config
 make_dir /etc/nginx/conf.d
+make_dir /run/nginx
 cp -fv $nginx_conf /etc/nginx/nginx.conf
 cp -fv $nginx_app_conf /etc/nginx/conf.d/front.conf
 pm2 l &>/dev/null
@@ -22,19 +22,13 @@ nginx -s reload 2>/dev/null || nginx -c /etc/nginx/nginx.conf
 echo -e "nginx启动成功...\n"
 
 echo -e "======================4. 启动控制面板========================\n"
-if test -z "$(pm2 info panel 1>/dev/null)"; then
-  pm2 reload panel --source-map-support --time
-else
-  pm2 start $dir_root/build/app.js -n panel --source-map-support --time
-fi
+pm2 delete panel &>/dev/null
+pm2 start $dir_root/build/app.js -n panel --source-map-support --time
 echo -e "控制面板启动成功...\n"
 
 echo -e "======================5. 启动定时任务========================\n"
-if test -z "$(pm2 info schedule 1>/dev/null)"; then
-  pm2 reload schedule --source-map-support --time
-else
-  pm2 start $dir_root/build/schedule.js -n schedule --source-map-support --time
-fi
+pm2 delete schedule &>/dev/null
+pm2 start $dir_root/build/schedule.js -n schedule --source-map-support --time
 echo -e "定时任务启动成功...\n"
 
 if [[ $AutoStartBot == true ]]; then
@@ -49,18 +43,9 @@ if [[ $EnableExtraShell == true ]]; then
   echo -e "自定义脚本后台执行中...\n"
 fi
 
-#if [[ $ENABLE_WEB_JDC == true ]]; then
-#  cd /ql/ninja/backend
-#  pnpm install
-#  pm2 start
-#  cp sendNotify.js /ql/scripts/sendNotify.js
-#elif [[ $ENABLE_WEB_JDC == false ]]; then
-#  echo -e "已设置为不自动启动JDC面板，跳过...\n"
-#fi
 echo -e "############################################################\n"
 echo -e "容器启动成功..."
 echo -e "\n请先访问5700端口，登录成功面板之后再执行添加定时任务..."
-#echo -e "\n请先访问5701端口，登录成功面板之后再执行添加扫码任务..."
 echo -e "############################################################\n"
 
 crond -f >/dev/null

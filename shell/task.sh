@@ -295,7 +295,6 @@ run_nohup() {
 ## 正常运行单个脚本，$1：传入参数
 run_normal() {
     local first_param=$1
-    cd $dir_scripts
     define_program "$first_param"
     if [[ $first_param == *.js ]]; then
         if [[ $# -eq 1 ]]; then
@@ -305,6 +304,9 @@ run_normal() {
     combine_only
     log_time=$(date "+%Y-%m-%d-%H-%M-%S")
     log_dir_tmp="${first_param##*/}"
+    log_dir_tmp_path="${first_param%%/*}"
+    log_dir_tmp_path="${log_dir_tmp_path##*/}"
+    [[ $log_dir_tmp_path ]] && log_dir_tmp="${log_dir_tmp_path}_${log_dir_tmp}"
     log_dir="$dir_log/${log_dir_tmp%%.*}"
     log_path="$log_dir/$log_time.log"
     cmd="&>> $log_path"
@@ -320,6 +322,12 @@ run_normal() {
     [[ $id ]] && update_cron "\"$id\"" "0" "$$" "$log_path" "$begin_timestamp"
     eval . $file_task_before "$@" $cmd
 
+    cd $dir_scripts
+    local relative_path="${first_param%/*}"
+    if [[ ! -z ${relative_path} ]] && [[ ${first_param} =~ "/" ]]; then
+        cd ${relative_path}
+        first_param=${first_param/$relative_path\//}
+    fi
     eval timeout -k 10s $command_timeout_time $which_program $first_param $cmd
 
     eval . $file_task_after "$@" $cmd
@@ -355,10 +363,12 @@ run_concurrent() {
     
     local cookieStr=$(echo ${array_run[*]} | sed 's/\ /\&/g')
 
-    cd $dir_scripts
     define_program "$first_param"
     log_time=$(date "+%Y-%m-%d-%H-%M-%S")
     log_dir_tmp="${first_param##*/}"
+    log_dir_tmp_path="${first_param%%/*}"
+    log_dir_tmp_path="${log_dir_tmp_path##*/}"
+    [[ $log_dir_tmp_path ]] && log_dir_tmp="${log_dir_tmp_path}_${log_dir_tmp}"
     log_dir="$dir_log/${log_dir_tmp%%.*}"
     log_path="$log_dir/$log_time.log"
     cmd="&>> $log_path"
@@ -380,6 +390,13 @@ run_concurrent() {
     local envs=$(eval echo "\$${env_param}")
     local array=($(echo $envs | sed 's/&/ /g'))
     single_log_time=$(date "+%Y-%m-%d-%H-%M-%S.%N")
+
+    cd $dir_scripts
+    local relative_path="${first_param%/*}"
+    if [[ ! -z ${relative_path} ]] && [[ ${first_param} =~ "/" ]]; then
+        cd ${relative_path}
+        first_param=${first_param/$relative_path\//}
+    fi
     for i in "${!array[@]}"; do
         export ${env_param}=${array[i]}
         single_log_path="$log_dir/${single_log_time}_$((i + 1)).log"
@@ -410,10 +427,12 @@ run_designated() {
         exit 1
     fi
 
-    cd $dir_scripts
     define_program "$file_param"
     log_time=$(date "+%Y-%m-%d-%H-%M-%S")
     log_dir_tmp="${file_param##*/}"
+    log_dir_tmp_path="${file_param%%/*}"
+    log_dir_tmp_path="${log_dir_tmp_path##*/}"
+    [[ $log_dir_tmp_path ]] && log_dir_tmp="${log_dir_tmp_path}_${log_dir_tmp}"
     log_dir="$dir_log/${log_dir_tmp%%.*}"
     log_path="$log_dir/$log_time.log"
     cmd="&>> $log_path"
@@ -446,6 +465,12 @@ run_designated() {
 
     [[ ! -z $cookieStr ]] && export ${env_param}=${cookieStr}
 
+    cd $dir_scripts
+    local relative_path="${file_param%/*}"
+    if [[ ! -z ${relative_path} ]] && [[ ${file_param} =~ "/" ]]; then
+        cd ${relative_path}
+        file_param=${file_param/$relative_path\//}
+    fi
     eval timeout -k 10s $command_timeout_time $which_program $file_param $cmd
 
     eval . $file_task_after "$@" $cmd

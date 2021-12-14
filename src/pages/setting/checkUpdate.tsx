@@ -14,7 +14,7 @@ const CheckUpdate = ({ socketMessage }: any) => {
   const checkUpgrade = () => {
     if (updateLoading) return;
     setUpdateLoading(true);
-    const hide = message.loading('检查更新中...', 0);
+    message.loading('检查更新中...', 0);
     request
       .put(`${config.apiPrefix}system/update-check`)
       .then((_data: any) => {
@@ -24,7 +24,7 @@ const CheckUpdate = ({ socketMessage }: any) => {
           if (data.hasNewVersion) {
             showConfirmUpdateModal(data);
           } else {
-            message.success('已经是最新版了！');
+            showForceUpdateModal();
           }
         } else {
           message.error(data);
@@ -37,6 +37,32 @@ const CheckUpdate = ({ socketMessage }: any) => {
       .finally(() => {
         setUpdateLoading(false);
       });
+  };
+
+  const showForceUpdateModal = () => {
+    Modal.confirm({
+      width: 500,
+      title: '更新',
+      content: (
+        <>
+          <div>已经是最新版了！</div>
+          <div style={{ fontSize: 12, fontWeight: 400, marginTop: 5 }}>
+            青龙 {version} 是目前检测到的最新可用版本了。
+          </div>
+        </>
+      ),
+      okText: '确认',
+      cancelText: '强制更新',
+      onCancel() {
+        showUpdatingModal();
+        request
+          .put(`${config.apiPrefix}system/update`)
+          .then((_data: any) => {})
+          .catch((error: any) => {
+            console.log(error);
+          });
+      },
+    });
   };
 
   const showConfirmUpdateModal = (data: any) => {
@@ -107,13 +133,13 @@ const CheckUpdate = ({ socketMessage }: any) => {
     if (!modalRef.current || !socketMessage) {
       return;
     }
-    const { type, message, references } = socketMessage;
+    const { type, message: _message, references } = socketMessage;
 
     if (type !== 'updateSystemVersion') {
       return;
     }
 
-    const newMessage = `${value} \n ${message}`;
+    const newMessage = `${value}\n${_message}`;
     modalRef.current.update({
       content: (
         <div style={{ height: '60vh', overflowY: 'auto' }}>
@@ -138,7 +164,7 @@ const CheckUpdate = ({ socketMessage }: any) => {
         .getElementById('log-identifier')!
         .scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-    if (newMessage.includes('重启面板')) {
+    if (_message.includes('重启面板')) {
       message.warning({
         content: (
           <span>

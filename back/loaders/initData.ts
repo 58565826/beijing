@@ -5,67 +5,14 @@ import { Crontab, CrontabStatus } from '../data/cron';
 import CronService from '../services/cron';
 import EnvService from '../services/env';
 import _ from 'lodash';
-
-const initData = [
-  {
-    name: '更新面板',
-    command: `ql update`,
-    schedule: `${randomSchedule(60, 1)} ${randomSchedule(
-      6,
-      1,
-    ).toString()} * * *`,
-    isDisabled: 1,
-  },
-  {
-    name: '删除日志',
-    command: 'ql rmlog 7',
-    schedule: '30 7 */7 * *',
-    isDisabled: 1,
-  },
-  {
-    name: '互助码',
-    command: 'ql code',
-    schedule: '30 7 * * *',
-    isDisabled: 1,
-  },
-    {
-    name: '查询Cookie',
-    command: 'ql cookie',
-    schedule: '30 0-23/1 * * *',
-    isDisabled: 1,
-  },
-];
+import { dbs } from '../loaders/db';
 
 export default async () => {
   const cronService = Container.get(CronService);
   const envService = Container.get(EnvService);
   const dependenceService = Container.get(DependenceService);
-  const cronDb = cronService.getDb();
-  const envDb = envService.getDb();
-  const dependenceDb = dependenceService.getDb();
-
-  // compaction data file
-  cronDb.persistence.compactDatafile();
-  envDb.persistence.compactDatafile();
-  dependenceDb.persistence.compactDatafile();
-
-  cronDb.count({}, async (err, count) => {
-    if (count === 0) {
-      const data = initData.map((x: any) => {
-        const tab = new Crontab(x);
-        tab.created = new Date().valueOf();
-        tab.saved = false;
-        if (tab.name === '更新面板') {
-          tab.isSystem = 1;
-        } else {
-          tab.isSystem = 0;
-        }
-        return tab;
-      });
-      cronDb.insert(data);
-      await cronService.autosave_crontab();
-    }
-  });
+  const cronDb = dbs.cronDb;
+  const dependenceDb = dbs.dependenceDb;
 
   // 初始化更新所有任务状态为空闲
   cronDb.update(
@@ -75,12 +22,15 @@ export default async () => {
   );
 
   // 初始化时安装所有处于安装中，安装成功，安装失败的依赖
-  dependenceDb.find({ status: { $in: [0, 1, 2] } }).exec((err, docs) => {
+  dependenceDb.find({ status: { $in: [0, 1, 2] } }).exec(async (err, docs) => {
     const groups = _.groupBy(docs, 'type');
     for (const key in groups) {
       if (Object.prototype.hasOwnProperty.call(groups, key)) {
         const group = groups[key];
-        dependenceService.reInstall(group.map((x) => x._id));
+        const depIds = group.map((x) => x._id);
+        for (const dep of depIds) {
+          await dependenceService.reInstall([dep]);
+        }
       }
     }
   });

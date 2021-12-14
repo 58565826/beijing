@@ -6,19 +6,13 @@ import * as fs from 'fs';
 import DataStore from 'nedb';
 import { Env, EnvStatus, initEnvPosition } from '../data/env';
 import _ from 'lodash';
+import { dbs } from '../loaders/db';
 
 @Service()
 export default class EnvService {
-  private envDb = new DataStore({ filename: config.envDbFile });
-  constructor(@Inject('logger') private logger: winston.Logger) {
-    this.envDb.loadDatabase((err) => {
-      if (err) throw err;
-    });
-  }
+  private envDb = dbs.envDb;
 
-  public getDb(): DataStore {
-    return this.envDb;
-  }
+  constructor(@Inject('logger') private logger: winston.Logger) {}
 
   public async create(payloads: Env[]): Promise<Env[]> {
     const envs = await this.envs();
@@ -119,7 +113,9 @@ export default class EnvService {
   ): Promise<Env[]> {
     let condition = { ...query };
     if (searchText) {
-      const reg = new RegExp(searchText);
+      const encodeText = encodeURIComponent(searchText);
+      const reg = new RegExp(`${searchText}|${encodeText}`, 'i');
+
       condition = {
         $or: [
           {
@@ -225,11 +221,17 @@ export default class EnvService {
 
         // 忽略不符合bash要求的环境变量名称
         if (/^[a-zA-Z_][0-9a-zA-Z_]+$/.test(key)) {
-          env_string += `export ${key}="${_(group)
+          let value = _(group)
             .filter((x) => x.status !== EnvStatus.disabled)
             .map('value')
             .join('&')
-            .replace(/ /g, '')}"\n`;
+            .replace(/ /g, '');
+          if (/"/.test(value)) {
+            value = `'${value}'`;
+          } else {
+            value = `"${value}"`;
+          }
+          env_string += `export ${key}=${value}\n`;
         }
       }
     }

@@ -15,22 +15,19 @@ import ScheduleService from './schedule';
 import { spawn } from 'child_process';
 import SockService from './sock';
 import got from 'got';
+import { dbs } from '../loaders/db';
 
 @Service()
 export default class UserService {
   @Inject((type) => NotificationService)
   private notificationService!: NotificationService;
-  private authDb = new DataStore({ filename: config.authDbFile });
+  private authDb = dbs.authDb;
 
   constructor(
     @Inject('logger') private logger: winston.Logger,
     private scheduleService: ScheduleService,
     private sockService: SockService,
-  ) {
-    this.authDb.loadDatabase((err) => {
-      if (err) throw err;
-    });
-  }
+  ) {}
 
   public async login(
     payloads: {
@@ -406,18 +403,27 @@ export default class UserService {
       const currentVersionFile = fs.readFileSync(config.versionFile, 'utf8');
       const currentVersion = currentVersionFile.match(versionRegx)![1];
 
-      const lastVersionFileContent = await (
-        await got.get(config.lastVersionFile)
-      ).body;
-      const lastVersion = lastVersionFileContent.match(versionRegx)![1];
-      const lastLog = lastVersionFileContent.match(logRegx)
-        ? lastVersionFileContent.match(logRegx)![1]
-        : '';
+      let lastVersion = '';
+      let lastLog = '';
+      try {
+        const result = await Promise.race([
+          got.get(config.lastVersionFile, { timeout: 1000, retry: 0 }),
+          got.get(`https://ghproxy.com/${config.lastVersionFile}`, {
+            timeout: 5000,
+            retry: 0,
+          }),
+        ]);
+        const lastVersionFileContent = result.body;
+        lastVersion = lastVersionFileContent.match(versionRegx)![1];
+        lastLog = lastVersionFileContent.match(logRegx)
+          ? lastVersionFileContent.match(logRegx)![1]
+          : '';
+      } catch (error) {}
 
       return {
         code: 200,
         data: {
-          hasNewVersion: currentVersion !== lastVersion,
+          hasNewVersion: this.checkHasNewVersion(currentVersion, lastVersion),
           lastVersion,
           lastLog,
         },
@@ -428,6 +434,25 @@ export default class UserService {
         data: error.message,
       };
     }
+  }
+
+  private checkHasNewVersion(curVersion: string, lastVersion: string) {
+    const curArr = curVersion.split('.').map((x) => parseInt(x, 10));
+    const lastArr = lastVersion.split('.').map((x) => parseInt(x, 10));
+    if (curArr[0] < lastArr[0]) {
+      return true;
+    }
+    if (curArr[0] === lastArr[0] && curArr[1] < lastArr[1]) {
+      return true;
+    }
+    if (
+      curArr[0] === lastArr[0] &&
+      curArr[1] === lastArr[1] &&
+      curArr[2] < lastArr[2]
+    ) {
+      return true;
+    }
+    return false;
   }
 
   public async updateSystem() {

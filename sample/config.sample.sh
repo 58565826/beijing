@@ -145,6 +145,14 @@ export GOBOT_URL=""
 export GOBOT_TOKEN=""
 export GOBOT_QQ=""
 
+## 10. gotify
+## gotify_url 填写gotify地址,如https://push.example.de:8080
+## gotify_token 填写gotify的消息应用token
+## gotify_priority 填写推送消息优先级,默认为0
+export GOTIFY_URL="";
+export GOTIFY_TOKEN="";
+export GOTIFY_PRIORITY=0;
+
 ## 10. 临时屏蔽某个Cookie
 ## 10.1 按 Cookie 序号屏蔽
 ## 如果某些 Cookie 已经失效了，但暂时还没法更新，可以使用此功能在不删除该Cookie和重新修改Cookie编号的前提下，临时屏蔽掉某些编号的Cookie

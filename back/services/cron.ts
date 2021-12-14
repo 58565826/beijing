@@ -10,24 +10,17 @@ import { getFileContentByName } from '../config/util';
 import PQueue from 'p-queue';
 import { promises, existsSync } from 'fs';
 import { promisify } from 'util';
+import { dbs } from '../loaders/db';
 
 @Service()
 export default class CronService {
-  private cronDb = new DataStore({ filename: config.cronDbFile });
+  private cronDb = dbs.cronDb;
 
   private queue = new PQueue({
     concurrency: parseInt(process.env.MaxConcurrentNum as string) || 5,
   });
 
-  constructor(@Inject('logger') private logger: winston.Logger) {
-    this.cronDb.loadDatabase((err) => {
-      if (err) throw err;
-    });
-  }
-
-  public getDb(): DataStore {
-    return this.cronDb;
-  }
+  constructor(@Inject('logger') private logger: winston.Logger) {}
 
   private isSixCron(cron: Crontab) {
     const { schedule } = cron;
@@ -100,17 +93,21 @@ export default class CronService {
     last_running_time: number;
     last_execution_time: number;
   }) {
+    const options: any = {
+      status,
+      pid,
+      log_path,
+      last_execution_time,
+    };
+    if (last_running_time > 0) {
+      options.last_running_time = last_running_time;
+    }
+
     return new Promise((resolve) => {
       this.cronDb.update(
         { _id: { $in: ids } },
         {
-          $set: {
-            status,
-            pid,
-            log_path,
-            last_running_time,
-            last_execution_time,
-          },
+          $set: options,
         },
         { multi: true, returnUpdatedDocs: true },
         (err) => {
@@ -162,7 +159,9 @@ export default class CronService {
   public async crontabs(searchText?: string): Promise<Crontab[]> {
     let query = {};
     if (searchText) {
-      const reg = new RegExp(searchText, 'i');
+      const encodeText = encodeURIComponent(searchText);
+      const reg = new RegExp(`${searchText}|${encodeText}`, 'i');
+
       query = {
         $or: [
           {
@@ -252,16 +251,20 @@ export default class CronService {
       } else {
         return;
       }
-      const pids = pid.match(/\(\d+/g);
+      let pids = pid.match(/\(\d+/g);
       const killLogs = [];
-      for (const id of pids) {
-        const c = `kill -9 ${id.slice(1)}`;
-        const { stdout, stderr } = await execAsync(c);
-        if (stderr) {
-          killLogs.push(stderr);
-        }
-        if (stdout) {
-          killLogs.push(stdout);
+      if (pids && pids.length > 0) {
+        // node 执行脚本时还会有10个子进程，但是ps -ef中不存在，所以截取前三个
+        pids = pids.slice(0, 3);
+        for (const id of pids) {
+          const c = `kill -9 ${id.slice(1)}`;
+          const { stdout, stderr } = await execAsync(c);
+          if (stderr) {
+            killLogs.push(stderr);
+          }
+          if (stdout) {
+            killLogs.push(stdout);
+          }
         }
       }
       return killLogs.length > 0 ? JSON.stringify(killLogs) : '';
@@ -359,6 +362,10 @@ export default class CronService {
 
   public async log(_id: string) {
     const doc = await this.get(_id);
+    if (!doc) {
+      return '';
+    }
+
     if (doc.log_path) {
       return getFileContentByName(`${doc.log_path}`);
     }
@@ -425,10 +432,6 @@ export default class CronService {
       exec(`pm2 reload schedule`);
     }
     this.cronDb.update({}, { $set: { saved: true } }, { multi: true });
-  }
-
-  private reload_db() {
-    this.cronDb.loadDatabase();
   }
 
   public import_crontab() {

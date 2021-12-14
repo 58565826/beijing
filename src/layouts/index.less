@@ -152,8 +152,8 @@
 
 .ant-layout-content.ant-pro-basicLayout-content.ant-pro-basicLayout-has-header {
   margin-bottom: 0 !important;
-  min-height: calc(100vh - 66px);
-  min-height: calc(100vh - var(--vh-offset, 0px) - 66px);
+  min-height: calc(100vh - 72px);
+  min-height: calc(100vh - var(--vh-offset, 0px) - 72px);
 }
 
 .Resizer {
@@ -235,6 +235,7 @@
     box-shadow: none;
     transition: background-color 5000s ease-in-out 0s;
     -webkit-text-fill-color: @text-color;
+    caret-color: #e8e6f3 !important;
   }
 
   ::placeholder {
@@ -278,7 +279,35 @@
 }
 
 .side-menu-user-drop-menu {
+  position: relative;
+  margin: 0;
+  padding: 4px 0;
+  text-align: left;
+  background-clip: padding-box;
+  outline: none;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 6px 16px -8px rgb(0 0 0 / 8%), 0 9px 28px 0 rgb(0 0 0 / 5%),
+    0 12px 48px 16px rgb(0 0 0 / 3%);
   .ant-dropdown-menu-item:hover {
     color: #1890ff;
+  }
+}
+
+.ant-pro-sider-logo {
+  padding: 16px 8px !important;
+  h1 {
+    margin-left: 5px !important;
+  }
+  img {
+    width: 32px !important;
+    border-radius: 52% !important;
+  }
+}
+
+.ant-pro-global-header-logo {
+  a img {
+    // “∆∂Ø∂Àlogo±ª¿≠…Ï
+    width: auto !important;
   }
 }

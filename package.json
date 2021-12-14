@@ -29,6 +29,7 @@
     "@sentry/tracing": "^6.14.0",
     "body-parser": "^1.19.0",
     "celebrate": "^13.0.3",
+    "chokidar": "^3.5.2",
     "cors": "^2.8.5",
     "cron-parser": "^3.5.0",
     "dotenv": "^8.2.0",
@@ -50,7 +51,8 @@
     "sockjs": "^0.3.21",
     "typedi": "^0.8.0",
     "uuid": "^8.3.2",
-    "winston": "^3.3.3"
+    "winston": "^3.3.3",
+    "yargs": "^17.2.1"
   },
   "devDependencies": {
     "@ant-design/icons": "^4.6.2",

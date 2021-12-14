@@ -10,6 +10,7 @@ dir_repo=$dir_root/repo
 dir_raw=$dir_root/raw
 dir_log=$dir_root/log
 dir_db=$dir_root/db
+dir_dep=$dir_root/deps
 dir_list_tmp=$dir_log/.tmp
 dir_code=$dir_log/code
 dir_update_log=$dir_log/update
@@ -34,6 +35,8 @@ file_notify_js=$dir_scripts/sendNotify.js
 task_error_log_path=$dir_log/task_error.log
 nginx_app_conf=$dir_root/docker/front.conf
 nginx_conf=$dir_root/docker/nginx.conf
+dep_notify_py=$dir_dep/notify.py
+dep_notify_js=$dir_dep/sendNotify.js
 
 ## 清单文件
 list_crontab_user=$dir_config/crontab.list
@@ -137,14 +140,14 @@ define_cmd() {
     local cmd_prefix cmd_suffix
     if type task &>/dev/null; then
         cmd_suffix=""
-        if [[ -x "$dir_shell/task.sh" ]]; then
+        if [[ -f "$dir_shell/task.sh" ]]; then
             cmd_prefix=""
         else
             cmd_prefix="bash "
         fi
     else
         cmd_suffix=".sh"
-        if [[ -x "$dir_shell/task.sh" ]]; then
+        if [[ -f "$dir_shell/task.sh" ]]; then
             cmd_prefix="$dir_shell/"
         else
             cmd_prefix="bash $dir_shell/"
@@ -165,6 +168,7 @@ fix_config() {
     make_dir $dir_repo
     make_dir $dir_raw
     make_dir $dir_update_log
+    make_dir $dir_dep
 
     if [[ ! -s $file_config_user ]]; then
         echo -e "复制一份 $file_config_sample 为 $file_config_user，随后请按注释编辑你的配置文件：$file_config_user\n"
@@ -219,11 +223,24 @@ fix_config() {
         cat /dev/null > /etc/nginx/conf.d/default.conf
         echo
     fi
+
+    if [[ ! -s $dep_notify_js ]]; then
+        echo -e "复制一份 $file_notify_js_sample 为 $dep_notify_js\n"
+        cp -fv $file_notify_js_sample $dep_notify_js
+        echo
+    fi
+
+    if [[ ! -s $dep_notify_py ]]; then
+        echo -e "复制一份 $file_notify_py_sample 为 $dep_notify_py\n"
+        cp -fv $file_notify_py_sample $dep_notify_py
+        echo
+    fi
+    
 }
 
 ## npm install 子程序，判断是否为安卓，判断是否安装有pnpm
 npm_install_sub() {
-    if [[ $is_termux -eq 1 ]]; then
+    if [ $is_termux -eq 1 ]; then
         npm install --production --no-bin-links --registry=https://registry.npm.taobao.org || npm install --production --no-bin-links
     elif ! type pnpm &>/dev/null; then
         npm install --production --registry=https://registry.npm.taobao.org || npm install --production
